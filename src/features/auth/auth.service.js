@@ -32,8 +32,11 @@ class AuthService {
       user: {
         id: user.id_user,
         nombre: user.nombre,
+        first_name: user.first_name,
+        last_name: user.last_name,
         email: user.email,
-        rol: user.rol_nombre
+        rol: user.rol_nombre,
+        id_rol: user.id_rol
       }
     };
   }
