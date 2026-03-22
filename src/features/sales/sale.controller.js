@@ -15,7 +15,8 @@ class SaleController {
       console.error('Error al procesar la venta:', error);
       res.status(500).json({ 
         status: 'error', 
-        message: 'Ocurrió un error en el servidor al registrar la venta' 
+        message: 'Ocurrió un error en el servidor al registrar la venta',
+        detail: error.message
       });
     }
   }

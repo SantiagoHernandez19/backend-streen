@@ -34,3 +34,8 @@ GET https://backend-streen.onrender.com/api/categories
 
 ### 4. TRAER PRODUCTOS (Para ver la Gorra que guardaste)
 GET https://backend-streen.onrender.com/api/products
+
+###
+
+### 5. TRAER VENTAS
+GET https://backend-streen.onrender.com/api/sales
