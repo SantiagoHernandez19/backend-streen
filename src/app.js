@@ -12,6 +12,12 @@ app.get('/', (req, res) => {
   res.status(200).json({ status: 'success', message: 'API de Node.js + Express corriendo exitosamente' });
 });
 
-// (Acá en el futuro agregaremos las rutas, ej: app.use('/api/products', productRoutes))
+// Importamos las rutas de nuestros módulos (Features)
+const categoryRoutes = require('./features/categories/category.routes');
+const productRoutes = require('./features/products/product.routes');
+
+// Montamos las rutas (Asignando el prefijo /api)
+app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);
 
 module.exports = app;
