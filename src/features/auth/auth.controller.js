@@ -13,9 +13,10 @@ class AuthController {
       });
     } catch (error) {
       console.error('Error en Login:', error);
-      res.status(401).json({ 
+      const isInvalid = error.message === 'Credenciales inválidas';
+      res.status(isInvalid ? 401 : 500).json({ 
         status: 'error', 
-        message: 'Correo o contraseña incorrectos'
+        message: isInvalid ? 'Correo o contraseña incorrectos' : 'Error interno: ' + error.message
       });
     }
   }
