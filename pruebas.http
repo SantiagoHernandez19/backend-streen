@@ -1,0 +1,36 @@
+### 1. Crear una Categoría Nueva
+POST https://backend-streen.onrender.com/api/categories
+Content-Type: application/json
+
+{
+  "nombre": "Gorras Exclusivas",
+  "descripcion": "Gorras de colección para The Streen"
+}
+
+### 
+
+### 2. Crear un Producto Nuevo 
+# OJO: Cambia "id_categoria" al número (ID) de la categoría que se te haya creado arriba
+POST https://backend-streen.onrender.com/api/products
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Plana Negra Streen",
+  "descripcion": "Gorra negra edición especial de prueba",
+  "precio": 120000.00,
+  "stock": 15,
+  "id_categoria": 1,
+  "tallas": ["Ajustable", "7 1/4"],
+  "colores": ["Negro", "Gris"],
+  "imagenes": ["https://res.cloudinary.com/miapp/gorranegra1.jpg"]
+}
+
+###
+
+### 3. TRAER CATEGORÍAS (Para ver que sí guardó)
+GET https://backend-streen.onrender.com/api/categories
+
+###
+
+### 4. TRAER PRODUCTOS (Para ver la Gorra que guardaste)
+GET https://backend-streen.onrender.com/api/products

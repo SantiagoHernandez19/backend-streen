@@ -31,6 +31,30 @@ class ProductService {
     const { rows } = await pool.query(query, values);
     return rows[0];
   }
+
+  async updateProduct(id, productData) {
+    const { id_categoria, nombre, descripcion, precio, precio_original, stock, tallas, colores, imagenes, is_active } = productData;
+    const query = `
+      UPDATE products 
+      SET id_categoria = $1, nombre = $2, descripcion = $3, precio = $4, precio_original = $5, 
+          stock = $6, tallas = $7, colores = $8, imagenes = $9, is_active = $10, updated_at = NOW()
+      WHERE id_producto = $11
+      RETURNING *
+    `;
+    const values = [
+      id_categoria, nombre, descripcion, precio, precio_original || null, 
+      stock || 0, JSON.stringify(tallas || []), JSON.stringify(colores || []), JSON.stringify(imagenes || []), 
+      is_active !== undefined ? is_active : true, id
+    ];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  }
+
+  async deleteProduct(id) {
+    const query = 'DELETE FROM products WHERE id_producto = $1 RETURNING *';
+    const { rows } = await pool.query(query, [id]);
+    return rows[0];
+  }
 }
 
 module.exports = new ProductService();

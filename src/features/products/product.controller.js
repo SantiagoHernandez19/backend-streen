@@ -45,6 +45,50 @@ class ProductController {
       });
     }
   }
+
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const updatedProduct = await productService.updateProduct(id, req.body);
+      
+      if (!updatedProduct) {
+        return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+      }
+      
+      res.json({
+        status: 'success',
+        data: { product: updatedProduct }
+      });
+    } catch (error) {
+      console.error("Error al actualizar producto:", error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Error interno al actualizar el producto'
+      });
+    }
+  }
+
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const deletedProduct = await productService.deleteProduct(id);
+      
+      if (!deletedProduct) {
+        return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+      }
+      
+      res.json({
+        status: 'success',
+        message: 'Producto eliminado permanentemente de la Base de Datos'
+      });
+    } catch (error) {
+      console.error("Error al eliminar producto:", error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Error interno al eliminar el producto'
+      });
+    }
+  }
 }
 
 module.exports = new ProductController();
