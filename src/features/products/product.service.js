@@ -12,6 +12,25 @@ class ProductService {
     const { rows } = await pool.query(query);
     return rows;
   }
+
+  async createProduct(productData) {
+    const { id_categoria, nombre, descripcion, precio, precio_original, stock, tallas, colores, imagenes } = productData;
+    const query = `
+      INSERT INTO products (
+        id_categoria, nombre, descripcion, precio, precio_original, 
+        stock, tallas, colores, imagenes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
+    `;
+    
+    // Convertimos los arrays/objetos a string literal tipo JSON para que PostgreSQL los acepte en las columnas JSONB
+    const values = [
+      id_categoria, nombre, descripcion, precio, precio_original || null, 
+      stock || 0, JSON.stringify(tallas || []), JSON.stringify(colores || []), JSON.stringify(imagenes || [])
+    ];
+    
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  }
 }
 
 module.exports = new ProductService();
