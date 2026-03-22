@@ -93,7 +93,13 @@ class AuthService {
       VALUES ('Tiago', 'Admin', 'tiago@streen.com', '$2a$10$Ew.ItMlyyq4N.aT8lC1V2O8wOqIIfxP0/L9m8.Vn1z2L0U5XzN5yq', 1);
     `);
     
-    return { message: "✅ Base de datos inicializada correctamente" };
+    // Consulta de verificación
+    const { rows } = await pool.query('SELECT id_user, email, first_name FROM users');
+    
+    return { 
+      message: "✅ Base de datos inicializada correctamente",
+      users: rows 
+    };
   }
 }
 
