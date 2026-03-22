@@ -33,6 +33,15 @@ class AuthController {
       res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
     }
   }
+
+  async initDB(req, res) {
+    try {
+      const result = await authService.initDB();
+      res.json({ status: 'success', ...result });
+    } catch (error) {
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();
