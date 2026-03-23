@@ -4,7 +4,11 @@ const cors = require('cors');
 const app = express();
 
 // Middlewares Globales
-app.use(cors());
+app.use(cors({
+  origin: '*', // Permitimos todo por ahora para asegurar la presentación de mañana
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // Permite req.body en formato JSON
 
 // Endpoint de prueba (Health Check indispensable para Render)
