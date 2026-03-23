@@ -14,17 +14,17 @@ class ProductService {
   }
 
   async createProduct(productData) {
-    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, imagenes, has_discount } = productData;
+    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, colores, imagenes, has_discount } = productData;
     const query = `
       INSERT INTO products (
         id_categoria, nombre, descripcion, precio_normal, precio_descuento, 
-        stock, tallas, imagenes, has_discount
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
+        stock, tallas, colores, imagenes, has_discount
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
     `;
     
     const values = [
       id_categoria, nombre, descripcion, precio_normal, precio_descuento || null, 
-      stock || 0, JSON.stringify(tallas || []), JSON.stringify(imagenes || []), has_discount || false
+      stock || 0, JSON.stringify(tallas || []), JSON.stringify(colores || []), JSON.stringify(imagenes || []), has_discount || false
     ];
     
     const { rows } = await pool.query(query, values);
@@ -32,17 +32,17 @@ class ProductService {
   }
 
   async updateProduct(id, productData) {
-    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, imagenes, has_discount, is_active } = productData;
+    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, colores, imagenes, has_discount, is_active } = productData;
     const query = `
       UPDATE products 
       SET id_categoria = $1, nombre = $2, descripcion = $3, precio_normal = $4, precio_descuento = $5, 
-          stock = $6, tallas = $7, imagenes = $8, has_discount = $9, is_active = $10
-      WHERE id_producto = $11
+          stock = $6, tallas = $7, colores = $8, imagenes = $9, has_discount = $10, is_active = $11
+      WHERE id_producto = $12
       RETURNING *
     `;
     const values = [
       id_categoria, nombre, descripcion, precio_normal, precio_descuento || null, 
-      stock || 0, JSON.stringify(tallas || []), JSON.stringify(imagenes || []), 
+      stock || 0, JSON.stringify(tallas || []), JSON.stringify(colores || []), JSON.stringify(imagenes || []), 
       has_discount || false, is_active !== undefined ? is_active : true, id
     ];
     const { rows } = await pool.query(query, values);

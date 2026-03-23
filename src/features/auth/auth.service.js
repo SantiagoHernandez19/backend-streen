@@ -104,6 +104,7 @@ class AuthService {
           precio_descuento NUMERIC(10,2),
           stock INT DEFAULT 0,
           tallas JSONB DEFAULT '[]',
+          colores JSONB DEFAULT '[]',
           imagenes JSONB DEFAULT '[]',
           has_discount BOOLEAN DEFAULT false,
           is_active BOOLEAN DEFAULT true,
@@ -144,6 +145,7 @@ class AuthService {
         ALTER TABLE products 
         ADD COLUMN IF NOT EXISTS precio_normal NUMERIC(10,2),
         ADD COLUMN IF NOT EXISTS precio_descuento NUMERIC(10,2),
+        ADD COLUMN IF NOT EXISTS colores JSONB DEFAULT '[]',
         ADD COLUMN IF NOT EXISTS has_discount BOOLEAN DEFAULT false;
       `);
       return { message: "✅ Tabla de productos actualizada con los nombres: precio_normal y precio_descuento" };
