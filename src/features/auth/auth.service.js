@@ -76,6 +76,12 @@ class AuthService {
     return rows;
   }
 
+  async getAllRoles() {
+    const query = 'SELECT * FROM roles ORDER BY id_rol ASC';
+    const { rows } = await pool.query(query);
+    return rows;
+  }
+
   // MÉTODO TEMPORAL DE EMERGENCIA (BORRA Y CREA TODO)
   async initDB() {
     await pool.query('DROP TABLE IF EXISTS products CASCADE;');

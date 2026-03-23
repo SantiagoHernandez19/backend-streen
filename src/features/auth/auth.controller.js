@@ -48,6 +48,19 @@ class AuthController {
     }
   }
 
+  async getAllRoles(req, res) {
+    try {
+      const roles = await authService.getAllRoles();
+      res.json({
+        status: 'success',
+        data: { roles }
+      });
+    } catch (error) {
+      console.error('Error trayendo roles:', error);
+      res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
+    }
+  }
+
   async initDB(req, res) {
     try {
       const result = await authService.initDB();
