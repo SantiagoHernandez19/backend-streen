@@ -70,7 +70,7 @@ class AuthService {
       SELECT u.id_user, u.first_name, u.last_name, u.email, u.is_active, r.name as rol_name 
       FROM users u
       LEFT JOIN roles r ON u.id_rol = r.id_rol
-      ORDER BY u.id_user DESC
+      ORDER BY u.id_user ASC
     `;
     const { rows } = await pool.query(query);
     return rows;
