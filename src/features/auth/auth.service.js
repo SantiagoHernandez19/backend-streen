@@ -43,7 +43,7 @@ class AuthService {
   }
 
   async register(userData) {
-    const { first_name, last_name, email, password } = userData;
+    const { first_name, last_name, email, password, document_type, document_number } = userData;
 
     const cleanEmail = email.toLowerCase().trim();
     // 1. Verificar si el email ya existe
@@ -60,11 +60,11 @@ class AuthService {
 
     // 3. Insertar usuario con rol predeterminado 'Usuario' si no viene uno
     const query = `
-      INSERT INTO users (first_name, last_name, email, password_hash, id_rol)
-      VALUES ($1, $2, $3, $4, COALESCE($5, (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)))
+      INSERT INTO users (first_name, last_name, email, password_hash, document_type, document_number, id_rol)
+      VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)))
       RETURNING id_user, email, first_name
     `;
-    const { rows } = await pool.query(query, [first_name, last_name, cleanEmail, hash, userData.id_rol || null]);
+    const { rows } = await pool.query(query, [first_name, last_name, cleanEmail, hash, document_type, document_number, userData.id_rol || null]);
     
     return rows[0];
   }
