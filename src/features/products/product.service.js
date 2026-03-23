@@ -14,18 +14,17 @@ class ProductService {
   }
 
   async createProduct(productData) {
-    const { id_categoria, nombre, descripcion, precio, precio_original, stock, tallas, imagenes } = productData;
+    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, imagenes, has_discount } = productData;
     const query = `
       INSERT INTO products (
-        id_categoria, nombre, descripcion, precio, precio_original, 
-        stock, tallas, imagenes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+        id_categoria, nombre, descripcion, precio_normal, precio_descuento, 
+        stock, tallas, imagenes, has_discount
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
     `;
     
-    // Convertimos los arrays/objetos a string literal tipo JSON para que PostgreSQL los acepte en las columnas JSONB
     const values = [
-      id_categoria, nombre, descripcion, precio, precio_original || null, 
-      stock || 0, JSON.stringify(tallas || []), JSON.stringify(imagenes || [])
+      id_categoria, nombre, descripcion, precio_normal, precio_descuento || null, 
+      stock || 0, JSON.stringify(tallas || []), JSON.stringify(imagenes || []), has_discount || false
     ];
     
     const { rows } = await pool.query(query, values);
@@ -33,18 +32,18 @@ class ProductService {
   }
 
   async updateProduct(id, productData) {
-    const { id_categoria, nombre, descripcion, precio, precio_original, stock, tallas, imagenes } = productData;
+    const { id_categoria, nombre, descripcion, precio_normal, precio_descuento, stock, tallas, imagenes, has_discount, is_active } = productData;
     const query = `
       UPDATE products 
-      SET id_categoria = $1, nombre = $2, descripcion = $3, precio = $4, precio_original = $5, 
-          stock = $6, tallas = $7, imagenes = $8
-      WHERE id_producto = $9
+      SET id_categoria = $1, nombre = $2, descripcion = $3, precio_normal = $4, precio_descuento = $5, 
+          stock = $6, tallas = $7, imagenes = $8, has_discount = $9, is_active = $10
+      WHERE id_producto = $11
       RETURNING *
     `;
     const values = [
-      id_categoria, nombre, descripcion, precio, precio_original || null, 
+      id_categoria, nombre, descripcion, precio_normal, precio_descuento || null, 
       stock || 0, JSON.stringify(tallas || []), JSON.stringify(imagenes || []), 
-      id
+      has_discount || false, is_active !== undefined ? is_active : true, id
     ];
     const { rows } = await pool.query(query, values);
     return rows[0];

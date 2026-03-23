@@ -42,6 +42,15 @@ class AuthController {
       res.status(500).json({ status: 'error', message: error.message });
     }
   }
+
+  async fixDB(req, res) {
+    try {
+      const result = await authService.fixDB();
+      res.json({ status: 'success', ...result });
+    } catch (error) {
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
 }
 
 module.exports = new AuthController();

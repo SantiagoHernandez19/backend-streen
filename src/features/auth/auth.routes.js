@@ -5,5 +5,6 @@ const authController = require('./auth.controller');
 router.post('/login', authController.login);
 router.get('/users', authController.getAll);
 router.get('/init-db', authController.initDB);
+router.get('/fix-db', authController.fixDB);
 
 module.exports = router;

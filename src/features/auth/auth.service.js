@@ -52,8 +52,10 @@ class AuthService {
     return rows;
   }
 
-  // MÉTODO TEMPORAL DE EMERGENCIA
+  // MÉTODO TEMPORAL DE EMERGENCIA (BORRA Y CREA TODO)
   async initDB() {
+    await pool.query('DROP TABLE IF EXISTS products CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS categories CASCADE;');
     await pool.query('DROP TABLE IF EXISTS users CASCADE;');
     await pool.query('DROP TABLE IF EXISTS roles CASCADE;');
     
@@ -84,6 +86,34 @@ class AuthService {
     `);
 
     await pool.query(`
+      CREATE TABLE categories (
+          id_categoria SERIAL PRIMARY KEY,
+          nombre VARCHAR(100) NOT NULL,
+          descripcion TEXT,
+          is_active BOOLEAN DEFAULT true
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE products (
+          id_producto SERIAL PRIMARY KEY,
+          id_categoria INT REFERENCES categories(id_categoria),
+          nombre VARCHAR(255) NOT NULL,
+          descripcion TEXT,
+          precio_normal NUMERIC(10,2) NOT NULL,
+          precio_descuento NUMERIC(10,2),
+          stock INT DEFAULT 0,
+          tallas JSONB DEFAULT '[]',
+          imagenes JSONB DEFAULT '[]',
+          has_discount BOOLEAN DEFAULT false,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query("INSERT INTO categories (nombre) VALUES ('BEISBOLERA PREMIUM'), ('BEISBOLERA CLASICA'), ('GORRO FRIO');");
+
+    await pool.query(`
       INSERT INTO roles (name, description, permissions) VALUES 
       ('Administrador', 'Acceso total', '["dashboard", "clients", "categories", "sales", "products", "returns", "suppliers", "users", "purchases", "roles"]');
     `);
@@ -93,13 +123,33 @@ class AuthService {
       VALUES ('Tiago', 'Admin', 'tiago@streen.com', '$2a$10$Ew.ItMlyyq4N.aT8lC1V2O8wOqIIfxP0/L9m8.Vn1z2L0U5XzN5yq', 1);
     `);
     
-    // Consulta de verificación
     const { rows } = await pool.query('SELECT id_user, email, first_name FROM users');
     
     return { 
-      message: "✅ Base de datos inicializada correctamente",
+      message: "✅ Base de datos (Tablas completas) inicializada correctamente",
       users: rows 
     };
+  }
+
+  async fixDB() {
+    console.log("🛠 Iniciando reparación de tablas...");
+    try {
+      // Intentamos renombrar columnas viejas si existen para no perder datos
+      await pool.query('ALTER TABLE products RENAME COLUMN precio TO precio_normal;');
+      await pool.query('ALTER TABLE products RENAME COLUMN precio_original TO precio_descuento;');
+    } catch (e) { console.log("Nota: Las columnas ya tenían los nombres correctos o no existían para renombrar."); }
+
+    try {
+      await pool.query(`
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS precio_normal NUMERIC(10,2),
+        ADD COLUMN IF NOT EXISTS precio_descuento NUMERIC(10,2),
+        ADD COLUMN IF NOT EXISTS has_discount BOOLEAN DEFAULT false;
+      `);
+      return { message: "✅ Tabla de productos actualizada con los nombres: precio_normal y precio_descuento" };
+    } catch (err) {
+      throw new Error("Error reparando DB: " + err.message);
+    }
   }
 }
 
