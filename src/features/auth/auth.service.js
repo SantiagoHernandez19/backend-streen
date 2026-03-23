@@ -103,6 +103,12 @@ class AuthService {
     return rows;
   }
 
+  async getAllRoles() {
+    const query = 'SELECT * FROM roles ORDER BY id_rol ASC';
+    const { rows } = await pool.query(query);
+    return rows;
+  }
+
   async createRole(roleData) {
     const { name, description, permissions } = roleData;
     const query = `
