@@ -36,7 +36,8 @@ class AuthService {
         last_name: user.last_name,
         email: user.email,
         rol: user.rol_name,
-        id_rol: user.id_rol
+        id_rol: user.id_rol,
+        permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions) : (user.permissions || [])
       }
     };
   }
