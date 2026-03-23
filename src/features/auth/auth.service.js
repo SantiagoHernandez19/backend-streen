@@ -6,7 +6,7 @@ class AuthService {
   async login(email, password) {
     // 1. Buscar al usuario
     const query = `
-      SELECT u.*, r.name as rol_name 
+      SELECT u.*, r.name as rol_name, r.permissions as permissions
       FROM users u
       LEFT JOIN roles r ON u.id_rol = r.id_rol
       WHERE u.email = $1 AND u.is_active = true
