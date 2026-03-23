@@ -119,10 +119,13 @@ class AuthService {
       ('Administrador', 'Acceso total', '["dashboard", "clients", "categories", "sales", "products", "returns", "suppliers", "users", "purchases", "roles"]');
     `);
 
+    const bcrypt = require('bcryptjs');
+    const adminHash = await bcrypt.hash('admin123', 10);
+    
     await pool.query(`
       INSERT INTO users (first_name, last_name, email, password_hash, id_rol)
-      VALUES ('Tiago', 'Admin', 'tiago@streen.com', '$2b$10$76GjHkM8.l7O1f/4.Xo00.vQW1LhVOf0p/j2m8.Vn1z2L0U5XzN5q', 1);
-    `);
+      VALUES ('Tiago', 'Admin', 'tiago@streen.com', $1, 1);
+    `, [adminHash]);
     
     const { rows } = await pool.query('SELECT id_user, email, first_name FROM users');
     
