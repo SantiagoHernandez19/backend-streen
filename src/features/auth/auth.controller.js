@@ -21,6 +21,20 @@ class AuthController {
     }
   }
 
+  async register(req, res) {
+    try {
+      const user = await authService.register(req.body);
+      res.json({
+        status: 'success',
+        message: 'Usuario registrado correctamente',
+        data: user
+      });
+    } catch (error) {
+      console.error('Error en registro:', error);
+      res.status(400).json({ status: 'error', message: error.message });
+    }
+  }
+
   async getAll(req, res) {
     try {
       const users = await authService.getAllUsers();

@@ -41,6 +41,30 @@ class AuthService {
     };
   }
 
+  async register(userData) {
+    const { first_name, last_name, email, password } = userData;
+
+    // 1. Verificar si el email ya existe
+    const exists = await pool.query('SELECT 1 FROM users WHERE email = $1', [email]);
+    if (exists.rowCount > 0) throw new Error('El correo ya está registrado');
+
+    // 2. Hashear contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+
+    // 3. Insertar usuario (por defecto rol de cliente o el que corresponda)
+    // Asumimos que el primer rol es Admin, el resto clientes? 
+    // Por ahora lo pongo con un id_rol manual si no viene, o nulo.
+    const query = `
+      INSERT INTO users (first_name, last_name, email, password_hash, id_rol)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id_user, email, first_name
+    `;
+    const { rows } = await pool.query(query, [first_name, last_name, email, hash, userData.id_rol || null]);
+    
+    return rows[0];
+  }
+
   async getAllUsers() {
     const query = `
       SELECT u.id_user, u.first_name, u.last_name, u.email, u.is_active, r.name as rol_name 
