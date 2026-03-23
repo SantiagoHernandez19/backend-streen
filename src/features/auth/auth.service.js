@@ -135,12 +135,31 @@ class AuthService {
   async fixDB() {
     console.log("🛠 Iniciando reparación de tablas...");
     try {
-      // Intentamos renombrar columnas viejas si existen para no perder datos
-      await pool.query('ALTER TABLE products RENAME COLUMN precio TO precio_normal;');
-      await pool.query('ALTER TABLE products RENAME COLUMN precio_original TO precio_descuento;');
-    } catch (e) { console.log("Nota: Las columnas ya tenían los nombres correctos o no existían para renombrar."); }
+      // 1. Crear tabla de categorías si no existe
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS categories (
+            id_categoria SERIAL PRIMARY KEY,
+            nombre VARCHAR(100) NOT NULL,
+            descripcion TEXT,
+            is_active BOOLEAN DEFAULT true
+        );
+      `);
 
-    try {
+      // 2. Insertar categorías base si está vacía
+      const { rowCount } = await pool.query('SELECT 1 FROM categories LIMIT 1');
+      if (rowCount === 0) {
+        await pool.query("INSERT INTO categories (nombre) VALUES ('BEISBOLERA PREMIUM'), ('BEISBOLERA CLASICA'), ('GORRO FRIO');");
+      }
+
+      // 3. Renombrar columnas viejas si existen para no perder datos
+      try {
+        await pool.query('ALTER TABLE products RENAME COLUMN precio TO precio_normal;');
+        await pool.query('ALTER TABLE products RENAME COLUMN precio_original TO precio_descuento;');
+      } catch (e) {
+        console.log("Nota: Las columnas ya tenían los nombres correctos o no existían.");
+      }
+
+      // 4. Agregar columnas nuevas a productos
       await pool.query(`
         ALTER TABLE products 
         ADD COLUMN IF NOT EXISTS precio_normal NUMERIC(10,2),
@@ -148,7 +167,8 @@ class AuthService {
         ADD COLUMN IF NOT EXISTS colores JSONB DEFAULT '[]',
         ADD COLUMN IF NOT EXISTS has_discount BOOLEAN DEFAULT false;
       `);
-      return { message: "✅ Tabla de productos actualizada con los nombres: precio_normal y precio_descuento" };
+
+      return { message: "✅ Reparación completa: Tabla de categorías creada y tabla de productos actualizada" };
     } catch (err) {
       throw new Error("Error reparando DB: " + err.message);
     }
