@@ -24,7 +24,7 @@ class SaleService {
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id_venta, created_at
       `;
-      const saleValues = [customer_email, subtotal, total, metodo_pago, metodo_envio, direccion_envio, comprobante_url];
+      const saleValues = [customer_email.toLowerCase().trim(), subtotal, total, metodo_pago, metodo_envio, direccion_envio, comprobante_url];
       const { rows: saleRows } = await client.query(saleQuery, saleValues);
       const newSale = saleRows[0];
 
@@ -110,6 +110,15 @@ class SaleService {
         `;
         await client.query(updateStockQuery, [item.cantidad, item.id_producto]);
       }
+
+      // 4. Ascender al usuario de "Usuario" a "Cliente" automáticamente si es su primera aprobación
+      const userUpdateQuery = `
+        UPDATE users 
+        SET id_rol = (SELECT id_rol FROM roles WHERE name = 'Cliente' LIMIT 1)
+        WHERE email = $1 
+        AND id_rol = (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)
+      `;
+      await client.query(userUpdateQuery, [saleRows[0].customer_email]);
 
       await client.query('COMMIT');
       return saleRows[0];

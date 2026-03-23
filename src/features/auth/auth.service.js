@@ -11,7 +11,7 @@ class AuthService {
       LEFT JOIN roles r ON u.id_rol = r.id_rol
       WHERE u.email = $1 AND u.is_active = true
     `;
-    const { rows } = await pool.query(query, [email]);
+    const { rows } = await pool.query(query, [email.toLowerCase().trim()]);
     const user = rows[0];
 
     // 2. Verificar existencia y contraseña
@@ -45,23 +45,26 @@ class AuthService {
   async register(userData) {
     const { first_name, last_name, email, password } = userData;
 
+    const cleanEmail = email.toLowerCase().trim();
     // 1. Verificar si el email ya existe
-    const exists = await pool.query('SELECT 1 FROM users WHERE email = $1', [email]);
+    const exists = await pool.query('SELECT 1 FROM users WHERE email = $1', [cleanEmail]);
     if (exists.rowCount > 0) throw new Error('El correo ya está registrado');
 
     // 2. Hashear contraseña
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
-    // 3. Insertar usuario (por defecto rol de cliente o el que corresponda)
-    // Asumimos que el primer rol es Admin, el resto clientes? 
-    // Por ahora lo pongo con un id_rol manual si no viene, o nulo.
+    // ASEGURAR QUE LOS ROLES EXISTEN (por si no se han creado)
+    await pool.query("INSERT INTO roles (name, description) VALUES ('Usuario', 'Cliente recién registrado') ON CONFLICT (name) DO NOTHING");
+    await pool.query("INSERT INTO roles (name, description) VALUES ('Cliente', 'Comprador verificado') ON CONFLICT (name) DO NOTHING");
+
+    // 3. Insertar usuario con rol predeterminado 'Usuario' si no viene uno
     const query = `
       INSERT INTO users (first_name, last_name, email, password_hash, id_rol)
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, COALESCE($5, (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)))
       RETURNING id_user, email, first_name
     `;
-    const { rows } = await pool.query(query, [first_name, last_name, email, hash, userData.id_rol || null]);
+    const { rows } = await pool.query(query, [first_name, last_name, cleanEmail, hash, userData.id_rol || null]);
     
     return rows[0];
   }
