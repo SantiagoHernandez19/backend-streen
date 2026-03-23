@@ -21,10 +21,10 @@ class ProductController {
 
   async create(req, res) {
     try {
-      const { nombre, precio, id_categoria } = req.body;
+      const { nombre, precio_normal, id_categoria } = req.body;
       
       // Validaciones básicas antes de tocar la Base de Datos
-      if (!nombre || !precio || !id_categoria) {
+      if (!nombre || !precio_normal || !id_categoria) {
         return res.status(400).json({ 
           status: 'error', 
           message: 'Nombre, precio y categoría son campos obligatorios para guardar una gorra' 
