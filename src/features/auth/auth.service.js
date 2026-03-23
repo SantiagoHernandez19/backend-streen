@@ -65,6 +65,33 @@ class AuthService {
     return rows[0];
   }
 
+  async updateUser(id, userData) {
+    const { nombre, apellido, email, rol, isActive } = userData;
+    
+    // Obtener id_rol del nombre del rol
+    const roleQuery = 'SELECT id_rol FROM roles WHERE name = $1';
+    const { rows: roleRows } = await pool.query(roleQuery, [rol]);
+    const id_rol = roleRows.length > 0 ? roleRows[0].id_rol : 3; // Default Cliente
+
+    const query = `
+      UPDATE users 
+      SET first_name = $1, last_name = $2, email = $3, id_rol = $4, is_active = $5
+      WHERE id_user = $6
+      RETURNING *
+    `;
+    const { rows } = await pool.query(query, [nombre, apellido, email, id_rol, isActive, id]);
+    return rows[0];
+  }
+
+  async deleteUser(id) {
+    // No permitir borrar al admin principal (id=1)
+    if (parseInt(id) === 1) throw new Error('No se puede eliminar al administrador principal');
+    
+    const query = 'DELETE FROM users WHERE id_user = $1';
+    await pool.query(query, [id]);
+    return true;
+  }
+
   async getAllUsers() {
     const query = `
       SELECT u.id_user, u.first_name, u.last_name, u.email, u.is_active, r.name as rol_name 
@@ -76,10 +103,42 @@ class AuthService {
     return rows;
   }
 
-  async getAllRoles() {
-    const query = 'SELECT * FROM roles ORDER BY id_rol ASC';
-    const { rows } = await pool.query(query);
-    return rows;
+  async createRole(roleData) {
+    const { name, description, permissions } = roleData;
+    const query = `
+      INSERT INTO roles (name, description, permissions)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+    const perms = typeof permissions === 'string' ? permissions : JSON.stringify(permissions);
+    const { rows } = await pool.query(query, [name, description, perms]);
+    return rows[0];
+  }
+
+  async updateRole(id, roleData) {
+    const { name, description, permissions, is_active } = roleData;
+    const perms = typeof permissions === 'string' ? permissions : JSON.stringify(permissions);
+    const query = `
+      UPDATE roles 
+      SET name = $1, description = $2, permissions = $3, is_active = $4
+      WHERE id_rol = $5
+      RETURNING *
+    `;
+    const { rows } = await pool.query(query, [name, description, perms, is_active, id]);
+    return rows[0];
+  }
+
+  async deleteRole(id) {
+    // Primero verificar si hay usuarios con este rol
+    const checkQuery = 'SELECT COUNT(*) FROM users WHERE id_rol = $1';
+    const { rows: checkRows } = await pool.query(checkQuery, [id]);
+    if (parseInt(checkRows[0].count) > 0) {
+      throw new Error('No se puede eliminar un rol que tiene usuarios asignados');
+    }
+
+    const query = 'DELETE FROM roles WHERE id_rol = $1';
+    await pool.query(query, [id]);
+    return true;
   }
 
   // MÉTODO TEMPORAL DE EMERGENCIA (BORRA Y CREA TODO)

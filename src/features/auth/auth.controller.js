@@ -48,6 +48,26 @@ class AuthController {
     }
   }
 
+  async updateUser(req, res) {
+    try {
+      const user = await authService.updateUser(req.params.id, req.body);
+      res.json({ status: 'success', data: { user } });
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  async deleteUser(req, res) {
+    try {
+      await authService.deleteUser(req.params.id);
+      res.json({ status: 'success', message: 'Usuario eliminado' });
+    } catch (error) {
+      console.error('Error eliminando usuario:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
   async getAllRoles(req, res) {
     try {
       const roles = await authService.getAllRoles();
@@ -58,6 +78,36 @@ class AuthController {
     } catch (error) {
       console.error('Error trayendo roles:', error);
       res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
+    }
+  }
+
+  async createRole(req, res) {
+    try {
+      const role = await authService.createRole(req.body);
+      res.status(201).json({ status: 'success', data: { role } });
+    } catch (error) {
+      console.error('Error creando rol:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  async updateRole(req, res) {
+    try {
+      const role = await authService.updateRole(req.params.id, req.body);
+      res.json({ status: 'success', data: { role } });
+    } catch (error) {
+      console.error('Error actualizando rol:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
+  async deleteRole(req, res) {
+    try {
+      await authService.deleteRole(req.params.id);
+      res.json({ status: 'success', message: 'Rol eliminado' });
+    } catch (error) {
+      console.error('Error eliminando rol:', error);
+      res.status(500).json({ status: 'error', message: error.message });
     }
   }
 
