@@ -58,6 +58,20 @@ class AuthController {
     }
   }
 
+  async updateProfile(req, res) {
+    try {
+      const user = await authService.updateProfile(req.params.id, req.body);
+      res.json({
+        status: 'success',
+        message: 'Perfil actualizado correctamente',
+        data: { user }
+      });
+    } catch (error) {
+      console.error('Error actualizando perfil:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  }
+
   async deleteUser(req, res) {
     try {
       await authService.deleteUser(req.params.id);

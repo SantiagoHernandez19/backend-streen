@@ -35,6 +35,12 @@ class AuthService {
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
+        phone: user.phone,
+        department: user.department,
+        city: user.city,
+        address: user.address,
+        document_type: user.document_type,
+        document_number: user.document_number,
         rol: user.rol_name,
         id_rol: user.id_rol,
         permissions: typeof user.permissions === 'string' ? JSON.parse(user.permissions) : (user.permissions || [])
@@ -60,31 +66,86 @@ class AuthService {
 
     // 3. Insertar usuario con rol predeterminado 'Usuario' si no viene uno
     const query = `
-      INSERT INTO users (first_name, last_name, email, password_hash, document_type, document_number, id_rol)
-      VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)))
+      INSERT INTO users (first_name, last_name, email, password_hash, document_type, document_number, phone, department, city, address, id_rol)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, (SELECT id_rol FROM roles WHERE name = 'Usuario' LIMIT 1)))
       RETURNING id_user, email, first_name
     `;
-    const { rows } = await pool.query(query, [first_name, last_name, cleanEmail, hash, document_type, document_number, userData.id_rol || null]);
+    const { rows } = await pool.query(query, [
+      first_name, 
+      last_name, 
+      cleanEmail, 
+      hash, 
+      document_type, 
+      document_number, 
+      userData.phone || null,
+      userData.department || null,
+      userData.city || null,
+      userData.address || null,
+      userData.id_rol || null
+    ]);
     
     return rows[0];
   }
 
   async updateUser(id, userData) {
-    const { nombre, apellido, email, rol, isActive } = userData;
-    
-    // Obtener id_rol del nombre del rol
-    const roleQuery = 'SELECT id_rol FROM roles WHERE name = $1';
-    const { rows: roleRows } = await pool.query(roleQuery, [rol]);
-    const id_rol = roleRows.length > 0 ? roleRows[0].id_rol : 3; // Default Cliente
+    const { first_name, last_name, email, id_rol, is_active, document_type, document_number, phone, department, city, address } = userData;
 
     const query = `
       UPDATE users 
-      SET first_name = $1, last_name = $2, email = $3, id_rol = $4, is_active = $5
-      WHERE id_user = $6
-      RETURNING *
+      SET first_name = $1, last_name = $2, email = $3, id_rol = $4, is_active = $5,
+          document_type = $6, document_number = $7, phone = $8, department = $9, city = $10, address = $11
+      WHERE id_user = $12
+      RETURNING id_user, first_name, last_name, email, document_type, document_number, phone, department, city, address, id_rol, is_active
     `;
-    const { rows } = await pool.query(query, [nombre, apellido, email, id_rol, isActive, id]);
+    const { rows } = await pool.query(query, [
+      first_name, last_name, email, id_rol, is_active, 
+      document_type, document_number, phone, department, city, address, id
+    ]);
     return rows[0];
+  }
+
+  async updateProfile(id, profileData) {
+    const { name, first_name, last_name, document_type, document_number, phone, department, city, address } = profileData;
+    
+    // Si viene 'name' (nombre completo), intentamos dividirlo
+    let finalFirstName = first_name;
+    let finalLastName = last_name;
+    
+    if (name && !first_name && !last_name) {
+      const parts = name.trim().split(' ');
+      finalFirstName = parts[0];
+      finalLastName = parts.slice(1).join(' ') || '';
+    }
+
+    const query = `
+      UPDATE users 
+      SET first_name = $1, last_name = $2, document_type = $3, document_number = $4, 
+          phone = $5, department = $6, city = $7, address = $8
+      WHERE id_user = $9
+      RETURNING id_user, first_name, last_name, email, document_type, document_number, phone, department, city, address
+    `;
+    const { rows } = await pool.query(query, [
+      finalFirstName, finalLastName, document_type, document_number, 
+      phone, department, city, address, id
+    ]);
+    
+    if (rows.length === 0) throw new Error('Usuario no encontrado');
+    
+    // Devolvemos el usuario con el formato que espera el frontend
+    const user = rows[0];
+    return {
+      id: user.id_user,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      nombre: `${user.first_name} ${user.last_name}`,
+      email: user.email,
+      document_type: user.document_type,
+      document_number: user.document_number,
+      phone: user.phone,
+      department: user.department,
+      city: user.city,
+      address: user.address
+    };
   }
 
   async deleteUser(id) {
@@ -178,6 +239,10 @@ class AuthService {
           password_hash VARCHAR(255) NOT NULL,
           document_type VARCHAR(50),
           document_number VARCHAR(50),
+          phone VARCHAR(20),
+          department VARCHAR(100),
+          city VARCHAR(100),
+          address TEXT,
           id_rol INT REFERENCES roles(id_rol),
           is_active BOOLEAN DEFAULT true,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -270,7 +335,16 @@ class AuthService {
         ADD COLUMN IF NOT EXISTS has_discount BOOLEAN DEFAULT false;
       `);
 
-      return { message: "✅ Reparación completa: Tabla de categorías creada y tabla de productos actualizada" };
+      // 5. Agregar columnas nuevas a usuarios
+      await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS department VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS city VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS address TEXT;
+      `);
+
+      return { message: "✅ Reparación completa: Tablas actualizadas con campos de perfil" };
     } catch (err) {
       throw new Error("Error reparando DB: " + err.message);
     }
